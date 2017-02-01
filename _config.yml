@@ -1,3 +1,15 @@
-theme: jekyll-theme-cayman
-name: WzDTj
+title: 弹头散讲
+email: j.dantong@gmail.com
+description: >
+  讲讲今天，谈谈人生。
+baseurl: ""
+url:"dantong.info"
+github_username: WzDTj
+
+# Blog Settings
 markdown: kramdown
+theme: minima
+name: WzDTj
+exclude:
+  - Gemfile
+  - Gemfile.lock
