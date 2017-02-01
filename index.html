@@ -37,7 +37,7 @@
       </span>
 
       <div class="trigger">
-          <a class="page-link" href="/about/">About</a>
+          <a class="page-link" href="/about/">关于我</a>
       </div>
     </nav>
 
@@ -48,25 +48,18 @@
       <div class="wrapper">
         <div class="home">
 
-  <h1 class="page-heading">Posts</h1>
-
-  {% for post in site.posts %}
   <ul class="post-list">
+      {% for post in site.posts %}
       <li>
         <span class="post-meta">{{ post.date | date_to_xmlschema }}</span>
-
         <h2>
           <a class="post-link" href="{{ post.url }}"> {{ post.title }} </a>
         </h2>
       </li>
-    
+      {% endfor %}
+
   </ul>
-  {% endfor %}
-
-  <p class="rss-subscribe">subscribe <a href="/feed.xml">via RSS</a></p>
-
 </div>
-
       </div>
     </main>
 
