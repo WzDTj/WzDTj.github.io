@@ -53,7 +53,7 @@
   {% for post in site.posts %}
   <ul class="post-list">
       <li>
-        <span class="post-meta">{{ post.date }}</span>
+        <span class="post-meta">{{ post.date | date_to_xmlschema }}</span>
 
         <h2>
           <a class="post-link" href="{{ post.url }}"> {{ post.title }} </a>
