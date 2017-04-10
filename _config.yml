@@ -1,4 +1,4 @@
-title: 弹头散讲
+title: 帅老金的博客
 email: j.dantong@gmail.com
 description: >
   讲讲人生，谈谈明天。
@@ -9,7 +9,7 @@ github_username: WzDTj
 # Blog Settings
 markdown: kramdown
 theme: minima
-name: WzDTj
+name:  帅老金
 exclude:
   - Gemfile
   - Gemfile.lock
