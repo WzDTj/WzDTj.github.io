@@ -1,0 +1,226 @@
+---
+layout: post
+title:  "Core Data 入门"
+date:   2016-07-24 17:05:42 +0800
+categories: 
+---
+
+
+## 简介
+
+`Core Data` 用于管理应用中模型层的框架。  
+它为常见的任务与对象生命周期，对象图管理，以及持久存储的关联，提供了广泛、自动的解决方案。
+
+## 常用类
+
+- `NSManagedObject`：被管理对象。
+- `NSManagedObjectContext`：被管理对象上下文。
+- `NSManagedObjextModel`：被管理对象模型。
+- `NSFetchRequest`：查询请求。
+- `NSPersistentStoreCoordinator`：持久化存储助理。
+- `NSPersistentStore`：持久化存储。
+- `NSEntityDescription`：实体描述。
+
+
+## 基本操作
+
+我们通过 Apple 给我们提供的 `Master-Detail Application` 模版来学习 `Core Data`。
+
+### 建立 被管理对象模型文件
+
+创建一个 `NSManagedObjectModel` 的实例。  
+可以让 `Core Data` 将可持续存储中的数据映射到被管理对象上。  
+模型由一些 `NSEntityDescription` 对象组成。
+一个 `NSEntityDescription` 代表了整一个实体。  
+实体就类似数据库中的表。  
+若勾选了使用 `Core Data` ，在项目目录里你就会看到一个 `.xcdatamodeld` 文件。  
+或者在项目中创建 `.xcdatamodeld` 也能建立被管理对象模型文件。
+
+```
+// 实例化 NSManagedObjectModel
+
+// 获取Documents目录的路径
+lazy var applicationDocumentsDirectory: NSURL = {
+    let urls = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
+    return urls[urls.count-1]
+}()
+
+// 由.xcdatamodeld来实例化managedObjectModel
+lazy var managedObjectModel: NSManagedObjectModel = {
+    let modelURL = NSBundle.mainBundle().URLForResource("CoreDataDemo_", withExtension: "momd")!
+    return NSManagedObjectModel(contentsOfURL: modelURL)!
+}()
+```
+
+### 初始化 Core Data Stack
+
+Core Data Stack主要由三个部分组成。
+
+- `NSManagedObjectContext`
+- `NSPersistentStoreCoordinator`
+- `NSManagedObjectModel`
+
+
+```
+// 在访问数据之前先初始化好 Stack
+
+lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
+	// 实例化 NSPersistentStoreCoordinator
+    let coordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
+    
+    // 给出将要建立的持久化存储文件的 url
+    let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("SingleViewCoreData.sqlite")
+    var failureReason = "There was an error creating or loading the application's saved data."
+    
+    // 添加 persistentStore
+    do {
+        try coordinator.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: nil)
+    } catch {
+        var dict = [String: AnyObject]()
+        dict[NSLocalizedDescriptionKey] = "Failed to initialize the application's saved data"
+        dict[NSLocalizedFailureReasonErrorKey] = failureReason
+
+        dict[NSUnderlyingErrorKey] = error as NSError
+        let wrappedError = NSError(domain: "YOUR_ERROR_DOMAIN", code: 9999, userInfo: dict)
+        NSLog("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
+        abort()
+    }
+
+    return coordinator
+}()
+
+// 在用建好的coordinator来配置managedObjectContext
+lazy var managedObjectContext: NSManagedObjectContext = {
+    let coordinator = self.persistentStoreCoordinator
+    var managedObjectContext = NSManagedObjectContext(concurrencyType: .MainQueueConcurrencyType)
+    managedObjectContext.persistentStoreCoordinator = coordinator
+
+    return managedObjectContext
+}()
+```
+
+### 保存！保存！保存！重要的事情说三遍。
+
+```
+// 在 managedObjectContext 中创建、修改 NSMangedObject 对象都需要保存
+func saveContext () {
+    if managedObjectContext.hasChanges {
+        do {
+            try managedObjectContext.save()
+        } catch {
+            let nserror = error as NSError
+            NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
+            abort()
+        }
+    }
+}
+```
+
+### 增、删、改、查（我就要先说查）。
+
+在 `MasterViewController.swift` 里
+我们要搞清楚 `Core Data` 的套路，其实和 `SQLite` 都差不多。
+
+
+```
+// 查询
+override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -&gt; UITableViewCell {
+    let cell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath)
+    let object = self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject
+    self.configureCell(cell, withObject: object)
+    return cell
+}
+
+func configureCell(cell: UITableViewCell, withObject object: NSManagedObject) {
+	cell.textLabel!.text = object.valueForKey("timeStamp")!.description
+}
+```
+
+这个套路很简单嘛
+
+1. 由于初始化 `fetchedResultsController` 的时候，就已经配置过 `fetchResult` ，并执行了 `performFetch` 操作了。
+2. 那咱们就直接用 `objectAtIndexPath` 对着 `fetchedResultsController` 一顿吼，把老子货叫出来。
+3. 你该给它的参数也都给了，当然会乖乖的给你数据了。
+4. 然后你拿着这玩意儿给 `configureCell` 玩去好了。
+
+```
+// 增加
+func insertNewObject(sender: AnyObject) {
+    let context = self.fetchedResultsController.managedObjectContext
+    let entity = self.fetchedResultsController.fetchRequest.entity!
+    let newManagedObject = NSEntityDescription.insertNewObjectForEntityForName(entity.name!, inManagedObjectContext: context)
+    newManagedObject.setValue(NSDate(), forKey: "timeStamp")
+
+    do {
+        try context.save()
+    } catch {
+        abort()
+    }
+}
+```
+
+- 先找到上下文、实体（表）。
+- 通过 `NSEntityDescription` 的 `insertNewObjectForEntityForName` 类方法，获得一个 `NSManagedObject` 实例。
+- 配置好 `newManagedObject`，并保存。
+
+```
+// 删除
+override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+    if editingStyle == .Delete {
+        let context = self.fetchedResultsController.managedObjectContext
+        context.deleteObject(self.fetchedResultsController.objectAtIndexPath(indexPath) as! NSManagedObject)
+
+        do {
+            try context.save()
+        } catch {
+            abort()
+        }
+    }
+}
+```
+
+- 先拿到上下文。
+- 再用 `deleteObject` 把要删的东西给删了。一个 `NSManagedObject` 实例就对应着类似于 `SQLite` 中的一条记录。
+- 删完了，保存一波完事。
+
+模版项目中没有改的操作，没有就自己写一份看看。
+
+```
+// 修改
+func modifyData() {
+    let newFetchRequest = NSFetchRequest(entityName: "Event")
+    let context = self.managedObjectContext!
+
+    var objects :Array&lt;NSManagedObject&gt;
+    do {
+        objects = try self.context.executeFetchRequest(newFetchRequest) as! [NSManagedObject]
+    } catch {
+        abort()
+    }
+
+    for object in objects {
+        object.setValue(NSDate(), forKey: "timeStamp")
+    }
+
+    do {
+        try self.managedObjectContext?.save()
+    } catch {
+        abort()
+    }
+}
+```
+
+我这个方法的目的呢，就是把所有 `Event` 实体中的 `timeStamp` 属性全部改成当前时间。
+
+1. 给据你的口味先弄个 `fetchRequest` 过来，顺便 `context` 也一块儿弄来。
+2. 先查一波，再改一波。代码和前面的套路都差不多。
+3. 最后保存！保存！保存！
+
+## 总结
+
+`Core Data` 刚开始看着好烦，好蛋疼，好多新概念组团来轰炸我，各种头疼脑裂。但是硬着头皮各种教程、代码看个不停，思路慢慢也就通了。别慌！稳住！
+
+## 参考
+- [Core Data Programming Guide](https://developer.apple.com/library/watchos/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075-CH2-SW1)
+- [Master-Detail Application 模版代码]()
+
