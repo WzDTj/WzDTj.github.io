@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "再出发"
+title:  "MAMP 搭建 Wordpress"
 date:   2015-11-02 03:40:36 +0800
 categories: 
 ---
