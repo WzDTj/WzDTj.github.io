@@ -4,8 +4,6 @@ title:  "Core Data 入门"
 date:   2016-07-24 17:05:42 +0800
 categories: 
 ---
-
-
 ## 简介
 
 `Core Data` 用于管理应用中模型层的框架。  
@@ -221,6 +219,7 @@ func modifyData() {
 `Core Data` 刚开始看着好烦，好蛋疼，好多新概念组团来轰炸我，各种头疼脑裂。但是硬着头皮各种教程、代码看个不停，思路慢慢也就通了。别慌！稳住！
 
 ## 参考
+
 - [Core Data Programming Guide](https://developer.apple.com/library/watchos/documentation/Cocoa/Conceptual/CoreData/index.html#//apple_ref/doc/uid/TP40001075-CH2-SW1)
 - [Master-Detail Application 模版代码]()
 
