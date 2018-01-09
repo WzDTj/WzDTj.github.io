@@ -2,3 +2,6 @@ _site/
 Gemfile
 Gemfile.lock
 .sass-cache/
+yulib.config
+yulib.resource/
+
