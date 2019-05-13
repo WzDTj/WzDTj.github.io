@@ -207,6 +207,9 @@ pre {
  * Site footer
  */
 .site-footer {
+  position: absolute;
+  width: 100%;
+  bottom: 0px;
   border-top: 1px solid #e8e8e8;
   padding: 30px 0; }
 
